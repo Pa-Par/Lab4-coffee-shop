@@ -22,8 +22,14 @@ app.get('/status', function (req, res) {
 
 // 2. GET: เรียกดูรายการกาแฟทั้งหมด (Read All)
 app.get('/coffees', function (req, res) {
-    console.log('GET /coffees - เรียกรายการทั้งหมด')
-    res.send(coffees)
+    console.log('GET /coffees - เรียกรายการทั้งหมด');
+    
+    const plainTextList = coffees.map(c => 
+        `ID: ${c.id}, Name: ${c.name}, Price: ${c.price}, Size: ${c.size}`
+    ).join('\n');
+
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(plainTextList); 
 })
 
 // 3. GET by ID: เรียกดูข้อมูลกาแฟตาม ID (Read Single)
@@ -33,10 +39,22 @@ app.get('/coffees/:coffeeId', function (req, res) {
 
     if (coffee) {
         console.log(`GET /coffees/${id} - พบรายการ`)
-        res.send(coffee)
+        const plainText = 
+            `id: ${coffee.id}\n` +
+            `name: ${coffee.name}\n` +
+            `price: ${coffee.price}\n` +
+            `size: ${coffee.size}`;
+        
+        res.setHeader('Content-Type', 'text/plain');
+        res.send(plainText) 
+        
     } else {
         console.log(`GET /coffees/${id} - ไม่พบรายการ`)
-        res.status(404).send({ message: `ไม่พบเมนูกาแฟ ID: ${id}` })
+        const plainText = 
+            `ไม่พบเมนูกาแฟ ID: ${id}\n`;
+        
+        res.setHeader('Content-Type', 'text/plain');
+        res.send(plainText) 
     }
 })
 
