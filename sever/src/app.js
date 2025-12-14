@@ -1,47 +1,103 @@
 let express = require('express')
-let bodyParser = require('body-parser') // เพิ่มบรรทัดนี้
+let bodyParser = require('body-parser')
 
 const app = express()
 
 // เพิ่ม 2 บรรทัดนี้เพื่อใช้งาน body-parser
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }))
 
+// --- Mock Data: จำลองฐานข้อมูลเมนูกาแฟ ---
+let coffees = [
+    { id: 1, name: 'Americano', price: 60, size: 'M' },
+    { id: 2, name: 'Latte', price: 75, size: 'L' },
+    { id: 3, name: 'Espresso', price: 50, size: 'S' }
+]
+let nextId = 4 // สำหรับกำหนด ID ถัดไป
 
+// --- API Routes สำหรับ Coffee Shop API ---
+
+// 1. GET: ดูสถานะเซิร์ฟเวอร์
 app.get('/status', function (req, res) {
-    res.send('Hello Node.js Server!')
+    res.send('✅ Coffee Shop API Server is running!')
 })
 
-app.get('/hello/:person', function (req, res) {
-    console.log('hello - ' + req.params.person)
-    res.send('say hello with ' + req.params.person)
+// 2. GET: เรียกดูรายการกาแฟทั้งหมด (Read All)
+app.get('/coffees', function (req, res) {
+    console.log('GET /coffees - เรียกรายการทั้งหมด')
+    res.send(coffees)
 })
 
-// get user by id
-app.get('/user/:userId', function (req, res) {
-    res.send('ดูข้อมูลผู้ใช้งาน: ' + req.params.userId)
+// 3. GET by ID: เรียกดูข้อมูลกาแฟตาม ID (Read Single)
+app.get('/coffees/:coffeeId', function (req, res) {
+    const id = parseInt(req.params.coffeeId)
+    const coffee = coffees.find(c => c.id === id)
+
+    if (coffee) {
+        console.log(`GET /coffees/${id} - พบรายการ`)
+        res.send(coffee)
+    } else {
+        console.log(`GET /coffees/${id} - ไม่พบรายการ`)
+        res.status(404).send({ message: `ไม่พบเมนูกาแฟ ID: ${id}` })
+    }
 })
 
-// get all user
-app.get('/users', function (req, res) {
-    res.send('เรียกข้อมูล ผู้ใช้งานทั้งหมด')
-    // create user
-app.post('/user/', function (req, res) {
-    res.send('ทำการสร้างผู้ใช้งาน: ' + JSON.stringify(req.body))
+// 4. POST: สร้างเมนูกาแฟใหม่ (Create)
+app.post('/coffees', function (req, res) {
+    const newCoffee = {
+        id: nextId++,
+        name: req.body.name || 'Unknown Coffee',
+        price: req.body.price ? parseFloat(req.body.price) : 0,
+        size: req.body.size || 'M'
+    }
+    
+    coffees.push(newCoffee)
+    console.log('POST /coffees - สร้างรายการใหม่: ' + JSON.stringify(newCoffee))
+    // ตอบกลับด้วยสถานะ 201 Created
+    res.status(201).send(newCoffee) 
 })
 
-// edit user
-app.put('/user/:userId', function (req, res) {
-    res.send('ทำการแก้ไขผู้ใช้งาน: ' + req.params.userId + ' : ' + JSON.stringify(req.body))
+// 5. PUT: แก้ไขข้อมูลกาแฟตาม ID (Update)
+app.put('/coffees/:coffeeId', function (req, res) {
+    const id = parseInt(req.params.coffeeId)
+    const index = coffees.findIndex(c => c.id === id)
+
+    if (index !== -1) {
+        // อัปเดตข้อมูล: เก็บ ID เดิมไว้, ใช้ข้อมูลใหม่จาก body และใช้ข้อมูลเดิมหากไม่มีการส่งมา
+        coffees[index] = {
+            id: id,
+            name: req.body.name || coffees[index].name,
+            price: req.body.price ? parseFloat(req.body.price) : coffees[index].price,
+            size: req.body.size || coffees[index].size
+        }
+        console.log(`PUT /coffees/${id} - แก้ไขรายการ: ` + JSON.stringify(coffees[index]))
+        res.send(coffees[index])
+    } else {
+        console.log(`PUT /coffees/${id} - ไม่พบรายการที่จะแก้ไข`)
+        res.status(404).send({ message: `ไม่พบเมนูกาแฟ ID: ${id} ที่จะแก้ไข` })
+    }
 })
 
-// delete user
-app.delete('/user/:userId', function (req, res) {
-    res.send('ทำการลบผู้ใช้งาน: ' + req.params.userId + ' : ' + JSON.stringify(req.body))
-})
+// 6. DELETE: ลบเมนูกาแฟตาม ID (Delete)
+app.delete('/coffees/:coffeeId', function (req, res) {
+    const id = parseInt(req.params.coffeeId)
+    const initialLength = coffees.length
+    
+    // กรองเอาเมนูที่ ID ไม่ตรงออกไป (เป็นการลบ)
+    coffees = coffees.filter(c => c.id !== id)
+
+    if (coffees.length < initialLength) {
+        console.log(`DELETE /coffees/${id} - ลบรายการเรียบร้อย`)
+        // ตอบกลับด้วยสถานะ 204 No Content สำหรับการลบสำเร็จ
+        res.status(204).send() 
+    } else {
+        console.log(`DELETE /coffees/${id} - ไม่พบรายการที่จะลบ`)
+        res.status(404).send({ message: `ไม่พบเมนูกาแฟ ID: ${id} ที่จะลบ` })
+    }
 })
 
+// --- Start Server ---
 let port = 8081
 app.listen(port, function () {
-    console.log('server running on ' + port)
+    console.log(`Server running on http://localhost:${port}`)
 })
