@@ -3,7 +3,6 @@ let bodyParser = require('body-parser')
 
 const app = express()
 
-// เพิ่ม 2 บรรทัดนี้เพื่อใช้งาน body-parser
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -57,7 +56,6 @@ app.post('/coffees', function (req, res) {
     
     coffees.push(newCoffee)
     console.log('POST /coffees - สร้างรายการใหม่: ' + JSON.stringify(newCoffee))
-    // ตอบกลับด้วยสถานะ 201 Created
     res.status(201).send(newCoffee) 
 })
 
@@ -67,7 +65,6 @@ app.put('/coffees/:coffeeId', function (req, res) {
     const index = coffees.findIndex(c => c.id === id)
 
     if (index !== -1) {
-        // อัปเดตข้อมูล: เก็บ ID เดิมไว้, ใช้ข้อมูลใหม่จาก body และใช้ข้อมูลเดิมหากไม่มีการส่งมา
         coffees[index] = {
             id: id,
             name: req.body.name || coffees[index].name,
@@ -87,12 +84,10 @@ app.delete('/coffees/:coffeeId', function (req, res) {
     const id = parseInt(req.params.coffeeId)
     const initialLength = coffees.length
     
-    // กรองเอาเมนูที่ ID ไม่ตรงออกไป (เป็นการลบ)
     coffees = coffees.filter(c => c.id !== id)
 
     if (coffees.length < initialLength) {
         console.log(`DELETE /coffees/${id} - ลบรายการเรียบร้อย`)
-        // ตอบกลับด้วยสถานะ 204 No Content สำหรับการลบสำเร็จ
         res.status(204).send() 
     } else {
         console.log(`DELETE /coffees/${id} - ไม่พบรายการที่จะลบ`)
@@ -103,5 +98,5 @@ app.delete('/coffees/:coffeeId', function (req, res) {
 // --- Start Server ---
 let port = 8081
 app.listen(port, function () {
-    console.log(`Server running on http://localhost:${port}`)
+    console.log('Server running on ' + port)
 })
