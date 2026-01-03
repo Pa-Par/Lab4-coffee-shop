@@ -1,62 +1,79 @@
-const { Coffee } = require('../models') // เรียกใช้ Model Coffee
+const {User} = require('../models')
 
 module.exports = {
-    // 1. ดึงเมนูทั้งหมด
+    // get all user
     async index (req, res) {
         try {
-            const coffees = await Coffee.findAll()
-            res.send(coffees)
+            const users = await User.findAll()
+            res.send(users)
         } catch (err) {
-            res.status(500).send({ error: 'ดึงข้อมูลไม่สำเร็จ' })
+            res.status(500).send({
+                error: 'The users information was incorrect'
+            })
         }
     },
 
-    // 2. สร้างเมนูใหม่
+    // create user
     async create (req, res) {
         try {
-            // บันทึกลงตาราง Coffee
-            const coffee = await Coffee.create(req.body)
-            res.send(coffee.toJSON())
+            const user = await User.create(req.body)
+            res.send(user.toJSON())
         } catch (err) {
-            res.status(500).send({ error: 'สร้างเมนูไม่สำเร็จ' })
+            res.status(500).send({
+                error: 'Create user incorrect'
+            })
         }
     },
 
-    // 3. แก้ไขเมนู
+    // edit user, suspend, active
     async put (req, res) {
         try {
-            await Coffee.update(req.body, {
-                where: { id: req.params.coffeeId }
+            await User.update(req.body, {
+                where: {
+                    id: req.params.userId
+                }
             })
             res.send(req.body)
         } catch (err) {
-            res.status(500).send({ error: 'แก้ไขไม่สำเร็จ' })
+            res.status(500).send({
+                error: 'Update user incorrect'
+            })
         }
     },
 
-    // 4. ลบเมนู
+    // delete user
     async remove (req, res) {
         try {
-            const coffee = await Coffee.findOne({
-                where: { id: req.params.coffeeId }
+            const user = await User.findOne({
+                where: {
+                    id: req.params.userId
+                }
             })
-            if (!coffee) {
-                return res.status(403).send({ error: 'ไม่มีเมนูนี้' })
+
+            if(!user){
+                return res.status(403).send({
+                    error: 'The user information was incorrect'
+                })
             }
-            await coffee.destroy()
-            res.send(coffee)
+
+            await user.destroy()
+            res.send(user)
         } catch (err) {
-            res.status(500).send({ error: 'ลบไม่สำเร็จ' })
+            res.status(500).send({
+                error: 'The user information was incorrect'
+            })
         }
     },
 
-    // 5. ดูเมนูรายตัว
+    // get user by id
     async show (req, res) {
         try {
-            const coffee = await Coffee.findByPk(req.params.coffeeId)
-            res.send(coffee)
+            const user = await User.findByPk(req.params.userId)
+            res.send(user)
         } catch (err) {
-            res.status(500).send({ error: 'หาข้อมูลไม่เจอ' })
+            res.status(500).send({
+                error: 'The user information was incorrect'
+            })
         }
     }
 }
